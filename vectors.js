@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 let group, camera, scene, renderer;
 
@@ -9,12 +11,11 @@ animate();
 
 function init() {
 
-
     scene = new THREE.Scene();
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth * 0.75, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
     // camera
@@ -71,10 +72,10 @@ function init() {
 
 function onWindowResize() {
 
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = window.innerWidth * 0.75 / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth * 0.75, window.innerHeight);
 
 }
 
@@ -90,6 +91,13 @@ function onWindowResize() {
 
 function processText() {
     const inputText = textInput.value;
+    const label = new TextGeometry(inputText, {
+        size: 1,
+        height: 0.2,
+    });
+
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const textMesh = new THREE.Mesh(label, textMaterial);
 
     // Call your Python script or any processing function here
     // Example: Assume there's a Python script 'process_text.py'
@@ -98,25 +106,22 @@ function processText() {
     const outputVector = generateRandomVector();
 
     // Visualize the output
-    visualizeVector(outputVector);
+    visualizeVector(outputVector, textMesh);
 }
 
 function generateRandomVector() {
     return new THREE.Vector3(
-        Math.random() * 10 - 5, // X coordinate between -5 and 5
-        Math.random() * 10 - 5, // Y coordinate between -5 and 5
-        Math.random() * 10 - 5  // Z coordinate between -5 and 5
+        Math.random() * 10 , 
+        Math.random() * 10 ,
+        Math.random() * 10 
     );
 }
 
-function visualizeVector(vector) {
-    // Clear previous visualization
-    visualizationContainer.innerHTML = '';
-
-    // Create a new visualization
-    const vectorText = document.createElement('div');
-    vectorText.innerHTML = `Vector: (${vector.x.toFixed(2)}, ${vector.y.toFixed(2)}, ${vector.z.toFixed(2)})`;
-    visualizationContainer.appendChild(vectorText);
+function visualizeVector(vector, label) {
+    scene.add(new THREE.ArrowHelper(vector, new THREE.Vector3(), 10, 0x0000ff));
+    label.position.copy(vector);
+    label.position.addVectors(label.position, camera.position);
+    scene.add(label);
 }
 
 function animate() {

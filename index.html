@@ -19,13 +19,18 @@
 			}
 		</script>
   
-  <div id="app">
-    <input type="text" id="textInput" placeholder="Enter text...">
+  <div id="app" style="min-width: 25%;">
+    <textarea type="text" id="textInput" placeholder="Enter text..." style="width: 95%; height: 300px"></textarea>
     <button id="visualizeButton">Visualize</button>
     <div id="visualization"></div>
   </div>
+  <div id="vis-container" style="position: absolute; right: 20%; left: 20%;">
+    <div id="vis">
+      <script type="module" src="/vectors.js"></script>
+    </div>
+  </div>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script> -->
-  <script type="module" src="/vectors.js"></script>
+  
 
 </body>
 
