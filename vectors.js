@@ -2,7 +2,6 @@ import * as THREE from 'three';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 let group, camera, scene, renderer;
 
@@ -10,7 +9,6 @@ init();
 animate();
 
 function init() {
-
     scene = new THREE.Scene();
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -53,20 +51,12 @@ function init() {
     group = new THREE.Group();
     scene.add(group);
 
-    // points
-    // let vector1 = new THREE.Vector3(0, 1, 1).normalize();
-    // let vector2 = new THREE.Vector3(1, 1, 0).normalize();
-    
-    // scene.add(new THREE.ArrowHelper(vector1, new THREE.Vector3(), 10, 0x0000ff));
-    // scene.add(new THREE.ArrowHelper(vector2, new THREE.Vector3(), 10, 0x00ff00));
-
-    // if normal and uv attributes are not removed, mergeVertices() can't consolidate indentical vertices with different normal/uv data
-
 
     window.addEventListener('resize', onWindowResize);
-    // // Add event listener for the button
+
+    // Add event listener for the button
     const visualizeButton = document.getElementById('visualizeButton');
-    visualizeButton.addEventListener('click', processText);
+    visualizeButton.addEventListener('click', processText);    
 
 }
 
@@ -91,22 +81,56 @@ function onWindowResize() {
 
 function processText() {
     const inputText = textInput.value;
-    const label = new TextGeometry(inputText, {
-        size: 1,
-        height: 0.2,
-    });
 
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const textMesh = new THREE.Mesh(label, textMaterial);
+    const words = inputText.split(' ');
 
-    // Call your Python script or any processing function here
-    // Example: Assume there's a Python script 'process_text.py'
-    // You can use fetch or other methods to communicate with a server running your Python script
-    // For simplicity, this example generates a random three-dimensional vector
-    const outputVector = generateRandomVector();
+  // Assume your CSV file has the structure [id, x, y, z, word]
+    Papa.parse('public/pca_vectors.csv', {
+        download: true,
+        header: true,
+        complete: function (results) {
+        const data = results.data;
 
-    // Visualize the output
-    visualizeVector(outputVector, textMesh);
+        // Initialize average vector
+        let averageVector = [0, 0, 0];
+
+        // Loop through user input words and update the average vector
+        words.forEach(word => {
+            console.log(word);
+            const entry = data.find(entry => entry.Word === word);
+            if (entry){
+                averageVector[0] += parseFloat(entry.X);
+                averageVector[1] += parseFloat(entry.Y);
+                averageVector[2] += parseFloat(entry.Z);
+            };
+                
+        });
+
+        // Calculate the average
+        const numWords = words.length;
+        averageVector = averageVector.map(value => value / numWords);
+
+        console.log(averageVector);
+        let outputVector = new THREE.Vector3((averageVector[0] * 10), (averageVector[1] * 10), (averageVector[2] * 10));
+        // Visualize the output
+        visualizeVector(outputVector);
+
+        }
+  });
+    // $.ajax({
+    //     type: "POST",
+    //     url: "generate_embedding.py",
+    //     data: { param: inputText },
+    // }).done(function(response) {
+    //     console.log("done")
+    //     console.log(response);
+    
+    // }); 
+
+   
+
+    // visualizeVector(outputVector);
+    
 }
 
 function generateRandomVector() {
@@ -117,11 +141,17 @@ function generateRandomVector() {
     );
 }
 
-function visualizeVector(vector, label) {
-    scene.add(new THREE.ArrowHelper(vector, new THREE.Vector3(), 10, 0x0000ff));
-    label.position.copy(vector);
-    label.position.addVectors(label.position, camera.position);
-    scene.add(label);
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+function visualizeVector(vector) {
+    scene.add(new THREE.ArrowHelper(vector, new THREE.Vector3(), 10, getRandomColor()));
 }
 
 function animate() {
